@@ -14,9 +14,10 @@ const generateToken = (id) => {
 
 // Register User
 exports.register = async (req, res) => {
-  const { username, password, email, contactNo, role } = req.body;
-
+  
   try {
+    const { username, password, email, contactNo, role } = req.body;
+    console.log(username, password, email, contactNo, role)
     const user = new User({ username, password, role, email, contactNo });
     await user.save();
     const token = generateToken(user._id);
@@ -80,3 +81,25 @@ exports.logout = (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+exports.addProducts = async(req, res) => {
+  try {
+    const {email} = req.params
+    const {skuid} = req.body
+    const user = await User.findOne({email});
+    // console.log(user)
+
+    if (user) {
+      user.addproducts.push(skuid)
+      await user.save()
+      return res.json({ message:'product added' });
+    } 
+    else {
+      return res.status(400).json({ message:'user not found' });
+
+    }
+
+  } catch (error) {
+    console.log(error)
+  }
+}

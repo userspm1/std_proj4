@@ -131,3 +131,47 @@ exports.getProducts = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 }
+exports.getProducbyId = async (req, res) => {
+  const {id} =req.params;
+  try {
+    const products = await Product.findById(id);
+
+    res.json(products);
+  } catch (error) {
+    console.error('Error retrieving products:', error);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+exports.getImage = async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    // Initialize GridFSBucket
+    const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+      bucketName: 'uploads'
+    });
+
+    // Find the file by filename
+    const files = await bucket.find({ filename }).toArray();
+
+    if (!files || files.length === 0) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    // Stream the file to the response
+    const downloadStream = bucket.openDownloadStreamByName(filename);
+
+    // Set appropriate content type
+    res.set('Content-Type', files[0].contentType || 'image/jpeg'); // Adjust if necessary
+
+    downloadStream.on('error', (err) => {
+      console.error('Error streaming image:', err);
+      res.status(500).json({ error: 'Error streaming image' });
+    });
+
+    downloadStream.pipe(res);
+  } catch (error) {
+    console.error('Error retrieving image:', error);
+    res.status(500).json({ error: 'Error retrieving image', details: error.message });
+  }
+};

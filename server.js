@@ -4,6 +4,7 @@ const dbconfig = require('./src/db_connect/db_connect');
 const cors = require('cors');
 const authRoutes = require('./src/routes/authRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
+const orderRoutes = require('./src/routes/orderRoute');
 
 // Initialize database connection
 dbconfig();
@@ -23,6 +24,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin', orderRoutes);
 
 const port = 8080;
 app.listen(port, () => {

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { type } = require('os');
 
 // Define the User schema
 const userSchema = new mongoose.Schema({
@@ -26,6 +27,7 @@ const userSchema = new mongoose.Schema({
     enum: ['admin', 'user'],
     default: 'user', 
   },
+  addproducts:{type:Array}
 }, {
   timestamps: true,
 });
