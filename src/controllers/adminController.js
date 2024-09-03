@@ -12,13 +12,14 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 exports.addProduct = async (req, res) => {
-
   try {
+    // Use multer to handle the image upload
     upload.single('image')(req, res, async function (err) {
       if (err) {
         return res.status(400).json({ error: err.message });
       }
-      // console.log('',req.file)
+
+      // Destructure the request body to get product details
       const { product_name, product_number, price, product_category, product_type, size, color, discription } = req.body;
 
       // Initialize GridFSBucket
@@ -26,42 +27,54 @@ exports.addProduct = async (req, res) => {
         bucketName: 'uploads'
       });
 
+      // Create an upload stream for the file
       const uploadStream = bucket.openUploadStream(req.file.originalname);
 
+      // Pipe the file buffer into the upload stream
       uploadStream.end(req.file.buffer);
 
+      // Wait for the upload to finish
       uploadStream.on('finish', async () => {
         console.log('File uploaded successfully.');
 
-
+        // Create a new product object
         const newProduct = new Product({
           imgName: req.file.originalname,
           imgPath: `uploads/${req.file.originalname}`,
-          product_name: req.body.product_name,
-          product_number: req.body.product_number,
-          price: req.body.price,
-          product_category: req.body.product_category,
-          product_type: req.body.product_type,
-          size: req.body.size,
-          color: req.body.color,
-          discription: req.body.discription,
-          imageId: uploadStream.id,
+          product_name,
+          product_number,
+          price,
+          product_category,
+          product_type,
+          size,
+          color,
+          discription,
+          imageId: uploadStream.id,  // Assign the correct imageId after upload
         });
 
+        // Save the new product to the database
         const savedProduct = await newProduct.save();
         console.log('Saved Product:', savedProduct);
 
+        // Send a success response with the saved product data
         res.status(201).json({
           message: 'Product added successfully',
           product: savedProduct,
         });
-      })
-    })
+      });
+
+      // Handle error events from the upload stream
+      uploadStream.on('error', (uploadError) => {
+        console.error('Error uploading file:', uploadError);
+        res.status(500).json({ error: 'Error uploading file', details: uploadError.message });
+      });
+    });
   } catch (error) {
     console.error('Error saving product:', error);
     res.status(500).json({ error: 'Error saving product', details: error.message });
   }
 };
+
 
 
 
@@ -100,10 +113,10 @@ exports.updateProduct = async (req, res) => {
 
 exports.deleteProduct = async (req, res) => {
   try {
-    const productId = req.params.id;
+    const {id} = req.params;
 
-    const result = await Product.findByIdAndDelete(productId);
-
+    const result = await Product.findByIdAndDelete({_id:id});
+    // console.log(id, result)
     if (!result) {
       return res.status(404).json({ message: 'Product not found' });
     }

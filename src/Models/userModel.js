@@ -24,10 +24,15 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'user'],
-    default: 'user', 
+    required: true,
   },
-  addproducts:{type:Array}
+  gender: {
+    type: String,
+  },
+  address: {
+    type: String,
+  },
+  addproducts: { type: Array,ref: 'id' }
 }, {
   timestamps: true,
 });

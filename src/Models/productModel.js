@@ -1,15 +1,8 @@
 const mongoose = require("mongoose");
 
 // Helper function to count words
-const countWords = (text) => {
-  if (!text) return 0;
-  return text.split(/\s+/).length;
-};
 
 // Custom validation function
-const wordCountValidator = (maxWords) => (value) => {
-  return countWords(value) <= maxWords;
-};
 
 const productSchema = new mongoose.Schema({
   product_name: {

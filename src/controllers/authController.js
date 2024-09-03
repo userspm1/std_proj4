@@ -10,18 +10,17 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '30d',
   });
-}; 
+};
 
 // Register User
 exports.register = async (req, res) => {
-  
+
   try {
-    const { username, password, email, contactNo, role } = req.body;
-    console.log(username, password, email, contactNo, role)
+    const { username, email, contactNo, role, password } = req.body;
+    // console.log(username, password, email, contactNo, role)
     const user = new User({ username, password, role, email, contactNo });
     await user.save();
-    const token = generateToken(user._id);
-    res.status(200).json({ message: 'User registered successfully', user, token });
+    res.status(200).json({ message: 'User registered successfully' });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -38,7 +37,17 @@ exports.login = async (req, res) => {
     }
     const token = generateToken(user._id);
     const role = user.role
-    res.json({ message: 'User logged in successfully',token,role });
+    const username = user.email
+    res.json({ message: 'User logged in successfully', token, role, username });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+exports.getUser = async (req, res) => {
+  const { email } = req.params;
+  try {
+    const user = await User.findOne({ email });
+    res.json(user);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -49,7 +58,7 @@ exports.updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
     const updateData = { ...req.body };
-    
+
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true });
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
@@ -82,20 +91,20 @@ exports.logout = (req, res) => {
   }
 };
 
-exports.addProducts = async(req, res) => {
+exports.addProducts = async (req, res) => {
   try {
-    const {email} = req.params
-    const {skuid} = req.body
-    const user = await User.findOne({email});
+    const { email } = req.params
+    const { skuid } = req.body
+    const user = await User.findOne({ email });
     // console.log(user)
 
     if (user) {
       user.addproducts.push(skuid)
       await user.save()
-      return res.json({ message:'product added' });
-    } 
+      return res.json({ message: 'product added' });
+    }
     else {
-      return res.status(400).json({ message:'user not found' });
+      return res.status(400).json({ message: 'user not found' });
 
     }
 
