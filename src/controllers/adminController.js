@@ -188,3 +188,31 @@ exports.getImage = async (req, res) => {
     res.status(500).json({ error: 'Error retrieving image', details: error.message });
   }
 };
+exports.getFilteredProducts = async (req, res) => {
+  const { search } = req.query;
+
+  try {
+    // Build a filter object based on the search query
+    const filter = {};
+    if (search) {
+      const regex = new RegExp(search, 'i'); // Case-insensitive search
+      filter.$or = [
+        { product_name: regex },
+        // { description: regex }
+      ];
+    }
+
+    const products = await Product.find(filter);
+
+    // Map over products to attach image URL
+    const productsWithImages = products.map(product => ({
+      ...product.toObject(),
+      image: `/image/${product.imgName}`
+    }));
+
+    res.json(productsWithImages);
+  } catch (error) {
+    console.error('Error retrieving filtered products:', error);
+    res.status(500).json({ error: error.message });
+  }
+};

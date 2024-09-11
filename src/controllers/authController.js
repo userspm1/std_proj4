@@ -20,7 +20,19 @@ exports.register = async (req, res) => {
     // console.log(username, password, email, contactNo, role)
     const user = new User({ username, password, role, email, contactNo });
     await user.save();
-    res.status(200).json({ message: 'User registered successfully' });
+    res.status(200).json({
+      message: 'User registered successfully',
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        contactNo: user.contactNo,
+        role: user.role,
+        address: user.address,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      }
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -31,18 +43,48 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    // Debug: log the incoming credentials
+    console.log("Login attempt with email:", email, "and password:", password);
+
+    // Find user by email
     const user = await User.findOne({ email });
+
+    // Debug: log the fetched user
+    console.log("User found:", user);
+
+    // Check if user exists and if the password is correct
     if (!user || !(await user.matchPassword(password))) {
+      console.log("Invalid credentials, user not found or incorrect password");
       return res.status(401).json({ message: 'Invalid credentials' });
     }
+
+    // Generate JWT token
     const token = generateToken(user._id);
-    const role = user.role
-    const username = user.email
-    res.json({ message: 'User logged in successfully', token, role, username });
+
+    // Return success response with user details and token
+    res.json({
+      message: 'User logged in successfully',
+      token,
+      role: user.role,
+      username: user.email,
+      users: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        contactNo: user.contactNo,
+        role: user.role,
+        address: user.address,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
+    });
   } catch (error) {
+    // Handle any errors
+    console.log("Error during login:", error);
     res.status(400).json({ error: error.message });
   }
 };
+
 exports.getUser = async (req, res) => {
   const { email } = req.params;
   try {
